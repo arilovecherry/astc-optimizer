@@ -1,14 +1,20 @@
-# astc-optimizer
+# ASTC OPTIMIZER
+> v1.2.0
 
-Un script de Python que convierte automáticamente archivos PNG a formato ASTC comprimido para mejorar el rendimiento y reducir el tamaño de tus mods.
+*https://github.com/Ari-Aguilar/astc-optimizer*
+
+
+Un script de Python con **interfaz de consola interactiva** que convierte automáticamente\
+archivos PNG a formato ASTC comprimido para mejorar el rendimiento y reducir\
+el tamaño de tus mods de [Funkin](https://github.com/FunkinCrew/funkin).
 
 ## ⚠️ Advertencias Importantes
 
 > **🔴 ESTE SCRIPT ELIMINA TUS ARCHIVOS PNG ORIGINALES**
 
 - Los archivos PNG serán reemplazados permanentemente por archivos `.astc` comprimidos
-- **HAZ UNA COPIA DE SEGURIDAD** de tu mod antes de ejecutar este script
-- Esta acción es **IRREVERSIBLE** - no podrás recuperar los PNG originales
+- **HAZ UNA COPIA DE SEGURIDAD** de tu mod antes de ejecutar este script (o usa la opción de backup integrada, ver abajo 👇)
+- Esta acción es **IRREVERSIBLE** salvo que hayas creado un backup - no podrás recuperar los PNG originales de otra forma
 - **NO ME HAGO RESPONSABLE POR PÉRDIDAS DE DATOS**
 
 > **📉 Sobre la calidad**
@@ -19,39 +25,34 @@ Un script de Python que convierte automáticamente archivos PNG a formato ASTC c
 
 ---
 
+## ✨ Novedades de esta versión
+
+- 🖥️ **Interfaz de consola interactiva**: menús navegables con flechas (↑↓), ya no hace falta escribir comandos ni recordar flags
+- 🤖 **Auto-instalación del encoder**: si no tienes `astcenc` instalado, el script puede descargarlo y configurarlo automáticamente por ti
+- 💾 **Backup integrado**: opción de crear una carpeta `backup-old` con copia de tus PNG originales antes de convertir, respetando la estructura de carpetas
+- 🔁 **Restaurar desde backup**: recupera tus PNG originales en cualquier momento desde el menú principal
+- 🚫 **Exclusión de carpetas de íconos**: opción para ignorar carpetas `icon`/`icons` durante el escaneo
+- 📂 **Cambio de carpeta sin reiniciar**: navega a otra ubicación del disco desde el propio programa
+- 📊 **Barra de progreso** durante la conversión
+- 📝 **Log de errores** (`optimizer-logError.txt`) con las fallas agrupadas por sección
+
+---
+
 ## 📋 Requisitos Previos
 
-### 1. Instalar ASTC Encoder
+### Opción A: Instalación automática (recomendada)
+
+Si no tienes ASTC Encoder instalado, el script te lo ofrecerá automáticamente la primera vez que lo ejecutes: descarga la última versión desde GitHub, prueba los binarios compatibles con tu sistema y deja todo listo para usar. Solo necesitas conexión a internet.
+
+### Opción B: Instalación manual
 
 1. Descarga [ASTC Encoder](https://github.com/ARM-software/astc-encoder/releases) desde las releases oficiales
 2. Descomprime el archivo descargado
-3. Encontrarás 3 ejecutables en la carpeta `bin/`:
-   - `astcenc-avx2` (CPUs modernas con AVX2)
-   - `astcenc-sse4.1` ⭐ **RECOMENDADO** (mejor compatibilidad)
-   - `astcenc-sse2` (CPUs antiguas)
+3. Encontrarás varios ejecutables en la carpeta `bin/` (por ejemplo `astcenc-avx2`, `astcenc-sse4.1` ⭐ **recomendado por compatibilidad**, `astcenc-sse2`)
+4. Renombra el ejecutable elegido a `astcenc` (o `astcenc.exe` en Windows)
+5. Colócalo junto al script `png_to_astc.py`, o cópialo a una carpeta que esté en tu PATH
 
-### 2. Configurar ASTC Encoder en el PATH
-
-Dependiendo de tu sistema operativo:
-
-#### 🐧 Linux / MacOS
-
-```bash
-cd ~/Descargas/astcenc-X.X.X-linux-x64/bin
-
-# Dale permisos de ejecución
-chmod +x astcenc-sse4.1
-
-# Cópialo al PATH del sistema
-sudo cp astcenc-sse4.1 /usr/local/bin/astcenc
-```
-
-#### 🪟 Windows
-
-1. Renombra `astcenc-sse4.1.exe` a `astcenc.exe`
-2. Mueve el archivo a `C:\Windows\System32\` o agrega su ubicación al PATH del sistema
-
-### 3. Verificar la instalación
+#### Verificar la instalación
 
 Abre una terminal/CMD y ejecuta:
 
@@ -59,14 +60,7 @@ Abre una terminal/CMD y ejecuta:
 astcenc -version
 ```
 
-Deberías ver algo como:
-
-```
-astcenc v5.3.0, 64-bit sse4.1+popcnt
-Copyright (c) 2011-2025 Arm Limited. All rights reserved.
-```
-
-Si ves este mensaje, ¡estás listo! ✅
+Si ves algo como `astcenc v5.3.0, 64-bit sse4.1+popcnt`, ¡estás listo! ✅
 
 ---
 
@@ -79,10 +73,12 @@ Si ves este mensaje, ¡estás listo! ✅
 ```
 tu_mod/
 ├── png_to_astc.py  ← Aquí
-├── textures/
-│   └── items/
-│       └── espada.png
-└── sounds/
+├── shared/
+│   └── images/
+│       └── logoMod.png
+├── images/
+│   └── title.png
+└── _polymod_meta.json
 ```
 
 2. Dale permisos de ejecución (solo en Linux/MacOS):
@@ -91,63 +87,47 @@ tu_mod/
 chmod +x png_to_astc.py
 ```
 
-### Ejecución Básica
+### Ejecución
 
-Abre una terminal en la carpeta de tu mod y ejecuta:
+Abre una terminal/CMD dentro de la carpeta de tu mod y ejecuta:
 
 ```bash
 python png_to_astc.py
 ```
 
-El script buscará **recursivamente** todos los archivos `.png` en la carpeta actual y subcarpetas.
+Todo el flujo ahora se maneja desde el menú interactivo, sin necesidad de pasar argumentos por línea de comandos. Usa las flechas ↑↓ para moverte, **Enter** para confirmar y **Esc** para retroceder al paso anterior.
 
-### Opciones Avanzadas
+### Menú Principal
 
-```bash
-# Convertir PNGs en una carpeta específica
-python png_to_astc.py textures/
-
-# Cambiar el tamaño de bloque (afecta calidad vs compresión)
-python png_to_astc.py -b 4x4    # Mejor calidad, archivos más grandes
-python png_to_astc.py -b 6x6    # Balance (por defecto)
-python png_to_astc.py -b 8x8    # Más compresión, menor calidad
-
-# Cambiar la calidad de compresión
-python png_to_astc.py -q veryfast    # Rápido, menor calidad
-python png_to_astc.py -q thorough    # Balance (por defecto)
-python png_to_astc.py -q exhaustive  # Mejor calidad, más lento
-
-# Combinar opciones
-python png_to_astc.py textures/ -b 4x4 -q exhaustive
-```
-
-### Proceso de Conversión
-
-1. El script mostrará cuántos archivos PNG encontró:
+Al iniciar, verás cuatro opciones:
 
 ```
-Encontrados 42 archivos PNG
-Directorio: /home/user/mi_mod
-Configuración: 6x6, calidad thorough
-
-¿Continuar con la conversión? (s/n):
+🔥  Iniciar Optimización
+🔁  Restaurar desde Backup (RESTORE)
+📂  Moverme a otra localización
+🚪  Salir
 ```
 
-2. Escribe `s` y presiona Enter para confirmar
+### Flujo de Optimización
 
-3. El script convertirá y eliminará los PNG automáticamente:
+Al elegir **Iniciar Optimización**, el script te guía paso a paso:
 
-```
-Convirtiendo: textures/items/espada.png
-✓ Creado: textures/items/espada.astc
-✓ Eliminado: textures/items/espada.png
+1. **Escaneo**: busca recursivamente todos los `.png` en la carpeta actual y subcarpetas
+2. **Ignorar íconos**: pregunta si quieres excluir carpetas llamadas `icon`/`icons`
+3. **Backup**: pregunta si quieres crear una copia de seguridad (`backup-old`) antes de convertir
+4. **Tamaño de bloque**: elige entre `4x4`, `6x6`, `8x8` o `12x12`
+5. **Calidad**: elige entre `veryfast`, `fast`, `medium`, `thorough` o `exhaustive`
+6. **Conversión**: el script convierte y elimina los PNG automáticamente, mostrando una barra de progreso
 
-==================================================
-Conversión completada:
-  ✓ Exitosas: 42
-  ✗ Fallidas: 0
-==================================================
-```
+Al terminar, se muestra un resumen con la cantidad de archivos convertidos y fallidos, y puedes elegir moverte a otra carpeta o salir.
+
+### Restaurar desde Backup
+
+Si creaste un backup durante la conversión, puedes recuperar tus PNG originales en cualquier momento desde **Restaurar desde Backup (RESTORE)** en el menú principal. El script buscará la carpeta `backup-old` en la ruta actual y reemplazará cada `.astc` encontrado por su versión PNG original.
+
+### Cambiar de Carpeta
+
+Puedes moverte a otra ubicación del disco sin salir ni reiniciar el script, usando la opción **Moverme a otra localización** del menú principal.
 
 ---
 
@@ -174,15 +154,16 @@ Conversión completada:
 
 ## ❓ Solución de Problemas
 
-### Error: "astcenc no está instalado"
+### Error: "No se detectó el ejecutable del compresor"
 
-- Verifica que ejecutaste `astcenc -version` correctamente
-- Asegúrate de haber copiado el ejecutable al PATH
+- Acepta la instalación automática cuando el script te la ofrezca, o
+- Verifica que ejecutaste `astcenc -version` correctamente de forma manual
+- Asegúrate de haber colocado el ejecutable junto al script o en el PATH
 - En Windows, reinicia la terminal después de agregar al PATH
 
 ### Error: "Host does not support AVX2"
 
-Tu CPU no soporta AVX2. Usa `astcenc-sse4.1` o `astcenc-sse2` en su lugar.
+Tu CPU no soporta AVX2. Si instalaste manualmente, usa `astcenc-sse4.1` o `astcenc-sse2` en su lugar (la instalación automática ya prueba varias variantes por ti).
 
 ### Error: "Permission denied"
 
@@ -191,14 +172,19 @@ En Linux/MacOS, asegúrate de dar permisos:
 chmod +x png_to_astc.py
 ```
 
+### No aparecen mis PNG originales al restaurar
+
+Verifica que la carpeta `backup-old` exista en la ruta actual y que no la hayas movido o renombrado tras la conversión.
+
 ---
 
 ## 💡 Consejos
 
-- **Prueba primero en una copia**: Haz pruebas en una carpeta de prueba antes de convertir todo tu mod
-- **Compara visualmente**: Revisa cómo se ven las texturas convertidas en el juego
-- **Ajusta según necesidad**: Usa mejor calidad (4x4) para texturas importantes y más compresión (8x8) para fondos
-- **Haz backups**: Siempre mantén una copia de tus PNG originales en otro lugar
+- **Usa el backup integrado**: si no estás seguro del resultado, activa la opción de backup antes de convertir
+- **Prueba primero en una copia**: haz pruebas en una carpeta de prueba antes de convertir todo tu mod
+- **Compara visualmente**: revisa cómo se ven las texturas convertidas en el juego
+- **Ajusta según necesidad**: usa mejor calidad (4x4) para texturas importantes y más compresión (8x8) para fondos
+- **Revisa el log**: si algo falla, `optimizer-logError.txt` tiene el detalle agrupado por sección
 
 ---
 
@@ -219,7 +205,3 @@ Si esta herramienta te fue útil, **dale una estrella al repositorio** ⭐
 ## 🤝 Contribuciones
 
 ¿Encontraste un bug o tienes una mejora? ¡Los pull requests son bienvenidos!
-
----
-
-**Hecho con ❤️ para la comunidad de modding**
