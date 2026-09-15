@@ -1,5 +1,4 @@
 # ASTC OPTIMIZER
-> v1.2.0
 
 *https://github.com/Ari-Aguilar/astc-optimizer*
 

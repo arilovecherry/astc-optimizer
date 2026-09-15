@@ -477,20 +477,34 @@ if os.name == "nt":
 else:
     import tty, termios, select
 
+    def _read_byte(fd):
+        """Lee un byte directo del descriptor (os.read), NUNCA sys.stdin.read().
+        sys.stdin es un TextIOWrapper con buffer propio: si se mezcla con
+        select() sobre el mismo fd, Python puede adelantarse y absorber varios
+        bytes de golpe (típico si se presionan dos flechas muy rápido), dejando
+        el fd "vacío" para select() aunque ya haya datos esperando en el buffer
+        interno de Python. Eso hace que select() reporte que no hay nada más
+        y la secuencia se interprete mal (ESC suelto, o bytes sueltos que caen
+        en '\\r' y se leen como ENTER). Usar os.read(fd, 1) evita ese buffer
+        intermedio: todo lo que select() ve es exactamente lo que se lee.
+        """
+        data = os.read(fd, 1)
+        return data.decode(errors="ignore") if data else ''
+
     def _getch():
         fd = sys.stdin.fileno()
         old = termios.tcgetattr(fd)
         try:
             tty.setraw(fd)
-            ch = sys.stdin.read(1)
+            ch = _read_byte(fd)
             if ch == '\x1b':
                 # Distingue un ESC suelto de una secuencia de flecha (ESC [ A/B/C/D)
-                ready, _, _ = select.select([sys.stdin], [], [], 0.05)
+                ready, _, _ = select.select([fd], [], [], 0.2)
                 if not ready:
                     return 'ESC'
-                ch2 = sys.stdin.read(1)
+                ch2 = _read_byte(fd)
                 if ch2 == '[':
-                    ch3 = sys.stdin.read(1)
+                    ch3 = _read_byte(fd)
                     if ch3 == 'A': return 'UP'
                     if ch3 == 'B': return 'DOWN'
                     if ch3 == 'C': return 'RIGHT'
@@ -752,7 +766,7 @@ def screen_quality_select():
     """Selección de la calidad de compresión. Devuelve el string elegido, o None si ESC."""
     print(f"  {C.CYAN}┌─ Seleccionar Calidad ────────────────────────────────────┐{C.RESET}")
     quality_opts = [
-        ("veryfast",  "Conversión rápida, menor calidad final"),
+        ("fastest",   "Conversión rápida, menor calidad final"),
         ("fast",      "Rápido con calidad aceptable"),
         ("medium",    "Balance entre velocidad y calidad"),
         ("thorough",  "Buena calidad, velocidad aceptable ✅"),

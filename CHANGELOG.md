@@ -1,6 +1,6 @@
 # CHANGELOG
 
-# [1.2.0] - 14/09/2026
+## [1.2.0] - 14/09/2026
 
 ### Nuevo
 - [NUEVO] Interfaz de consola interactiva con menús navegables por flechas (↑↓), reemplazando los prompts y flags de línea de comandos
@@ -15,3 +15,6 @@
 ### Mejora
 - [MEJORA] Detección del encoder ahora soporta múltiples nombres de binario (astcenc, astcenc-sse4.1, astcenc-sse2, astcenc-avx2, astcenc-neon)
 - [MEJORA] Pantalla de error con guía manual paso a paso si la auto-instalación falla
+### BugFix
+- [BUGFIX] Menú seleccionable en Linux/MacOS fallaba al seleccionar opciones
+- [BUGFIX] Seleccionar `veryfast` en opciones hacia fallar a la compresion al no existir, cambio a `fastest`
